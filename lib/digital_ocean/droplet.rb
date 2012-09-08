@@ -22,13 +22,7 @@ module DigitalOcean
 
       response = @client.request(
         :get,
-        "/droplets/#{id}/#{action}",
-        {
-          :name => @name,
-          :size_id => @size_id,
-          :image_id => @image_id,
-          :region_id => @region_id
-        }
+        "/droplets/#{@id}/#{action}"
       )
 
       raise "There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'" unless response["event_id"]

@@ -1,5 +1,8 @@
 require 'rest_client'
 require 'digital_ocean/droplets'
+require 'digital_ocean/regions'
+require 'digital_ocean/sizes'
+require 'digital_ocean/images'
 require 'json'
 
 module DigitalOcean
@@ -15,14 +18,6 @@ module DigitalOcean
     end
 
    
-    def XXX_remove_request(parameters) 
-      type = parameters[:type] || :get
-      uri = parameters[:uri] || '/'
-      params = parameters[:params] || {}
-      block = parameters[:block] || nil
-      make_request(type, uri, params, &block)
-    end
-
     
     def request(type=:get, uri='/', params={}, &block)
       url = BASE_URL + uri 
@@ -62,7 +57,23 @@ module DigitalOcean
       @droplets
     end
 
+    def regions(refresh=false)
+      @regions = nil if refresh
+      @regions = @regions || Regions.new(self)
+      @regions
+    end
     
+    def sizes(refresh=false)
+      @sizes = nil if refresh
+      @sizes = @sizes || Sizes.new(self)
+      @sizes
+    end
+
+    def images(refresh=false)
+      @images = nil if refresh
+      @images = @images || Images.new(self)
+      @images
+    end
 
   end
 
