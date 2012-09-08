@@ -5,8 +5,8 @@ require File.expand_path('../lib/digital_ocean/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.name          = "digital_ocean"
   gem.version       = DigitalOcean::VERSION
-  gem.summary       = %q{TODO: Summary}
-  gem.description   = %q{TODO: Description}
+  gem.summary       = %q{digital ocean API}
+  gem.description   = %q{Ruby API wrapper for digital ocean (http://www.digitalocean.com)}
   gem.license       = "MIT"
   gem.authors       = ["Jen Andre"]
   gem.email         = "jandre@gmail.com"
