@@ -3,6 +3,7 @@ require 'digital_ocean/droplets'
 require 'digital_ocean/regions'
 require 'digital_ocean/sizes'
 require 'digital_ocean/images'
+require 'digital_ocean/ssh_keys'
 require 'json'
 
 module DigitalOcean
@@ -30,6 +31,10 @@ module DigitalOcean
 
       if type == :get
         params = { :params => params }
+        params[:api_key] = @api_key
+        params[:client_id] = @client_id
+      else
+        url += "?client_id=#{client_id}&api_key=#{api_key}"
       end
 
       response = RestClient.send(type, url, params) 
@@ -75,6 +80,11 @@ module DigitalOcean
       @images
     end
 
+    def ssh_keys(refresh=false)
+      @ssh_keys = nil if refresh
+      @ssh_keys = @ssh_keys || SshKeys.new(self)
+      @ssh_keys
+    end
   end
 
 end
