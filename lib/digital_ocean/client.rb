@@ -15,26 +15,29 @@ module DigitalOcean
     end
 
    
-    def request(parameters) 
-      type = parameters[:type] || 'get'
+    def XXX_remove_request(parameters) 
+      type = parameters[:type] || :get
       uri = parameters[:uri] || '/'
       params = parameters[:params] || {}
       block = parameters[:block] || nil
       make_request(type, uri, params, &block)
     end
 
-    def make_request(type='get', uri='/', params={}, &block)
+    
+    def request(type=:get, uri='/', params={}, &block)
       url = BASE_URL + uri 
       params[:api_key] = @api_key
       params[:client_id] = @client_id
 
       puts "url: #{url}"
-   
-      if type == 'get'
+  
+      type = type.to_sym
+
+      if type == :get
         params = { :params => params }
       end
 
-      response = RestClient.send(type.to_sym, url, params) 
+      response = RestClient.send(type, url, params) 
   
       puts "response: #{response}"
       response = JSON.parse(response)
@@ -52,7 +55,9 @@ module DigitalOcean
       raise "Error performing `#{type} #{url}` with parameters=`#{params}`, got #{response}"
     end
 
-    def droplets
+    def droplets(refresh=false)
+      
+      @droplets = nil if refresh
       @droplets = @droplets || Droplets.new(self) 
       @droplets
     end

@@ -4,12 +4,15 @@ module DigitalOcean
     attr_accessor :name, :size_id, :image_id, :region_id
     attr_accessor :id, :backups_active, :status_id
 
-    def initialize(client, data={})
+    def initialize(client, container, data={})
       @client = client
+      @container = container
 
       if data
         # TODO: validate 
-        data.each { |key,value| send("#{key}=",value) if respond_to?(key.to_sym) } 
+        data.each do |key,value|
+          send("#{key}=",value) if respond_to?(key.to_sym) 
+        end
       end
 
     end
@@ -17,19 +20,18 @@ module DigitalOcean
     def command(action)
       raise 'You do not have a droplet id. Have you called save() on your object?' unless @id
 
-      uri = '/droplets/#{id}/#{action}'
-
       response = @client.request(
-        :uri => uri, 
-        :params => {
-          'name' => @name,
-          'size_id' => @size_id,
-          'image_id' => @image_id,
-          'region_id'=> @region_id
+        :get,
+        "/droplets/#{id}/#{action}",
+        {
+          :name => @name,
+          :size_id => @size_id,
+          :image_id => @image_id,
+          :region_id => @region_id
         }
       )
 
-      raise 'There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}' unless response.event_id
+      raise "There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'" unless response["event_id"]
 
     end
 
@@ -82,23 +84,26 @@ module DigitalOcean
     end
 
     def destroy
-      # TODO: maybe move to Droplets
-      command('destroy')
-      @id = Nil
+
+      if @id
+        command('destroy')
+        @container.delete(@id)
+        @id = nil
+      end
     end
 
     def refresh
       raise 'No id has been set.  Cannot refresh.  Have you called save() on this droplet?' unless @id
       
-      response = @client.request(:uri => '/droplets/#{id}')
+      response = @client.request(:get, "/droplets/#{id}")
 
       if !response['droplet']
         puts "No droplet fetched for id=#{id}"
-        return Nil
+        return nil
       end
 
       # TODO: validate 
-      response['droplet'].each { |key,value| send("#{key}=",value) if responds_to?(key) } 
+      response['droplet'].each { |key,value| send("#{key}=",value) if respond_to?(key) } 
 
       self
     end
@@ -109,9 +114,9 @@ module DigitalOcean
       if !@id
         
         response = @client.request(
-          :type => 'post',
-          :uri => '/droplets/new',
-          :params => {
+          :get,
+          '/droplets/new',
+          {
             'name' => @name,
             'size_id' => @size_id,
             'image_id' => @image_id,
@@ -119,13 +124,12 @@ module DigitalOcean
           }
         )
 
-        if !response.droplet
+        if !response["droplet"]
           puts "No droplet fetched for id=#{id}"
-          return Nil
+          return nil
         end
 
-        droplet = create(response.droplet) 
-        @id = droplet.id
+        @id = response["droplet"]["id"] 
       else
         raise 'Already created.'
       end
