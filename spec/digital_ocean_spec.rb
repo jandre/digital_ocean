@@ -6,3 +6,5 @@ describe DigitalOcean do
     subject.const_get('VERSION').should_not be_empty
   end
 end
+
+
