@@ -19,9 +19,12 @@ module DigitalOcean
 
     end
 
-
     def find_by_name
-      # TODO
+      keys = []
+      each do |key, value|
+        keys.push(value) if value.name == name
+      end
+      keys
     end
 
     def create

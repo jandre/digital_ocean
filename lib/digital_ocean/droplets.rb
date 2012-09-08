@@ -1,17 +1,19 @@
 require 'digital_ocean/droplet'
+require 'digital_ocean/client_error'
+
 
 module DigitalOcean
   class Droplets < Hash
 
     def initialize(client)
       @client = client
-
       refresh
     end
 
     # refresh all droplets
     def refresh
-      clear()
+
+      clear
       @client.request(:get, '/droplets/', {}) do |response| 
           response['droplets'].each do |droplet| 
             self[droplet['id']] = Droplet.new(@client, self, droplet) 
@@ -22,7 +24,7 @@ module DigitalOcean
 
     # get a droplet by id, with an optional refresh parameter
     def get(id, refresh=false)
-      raise 'Missing <id>: You must provide a droplet id' unless id
+      raise ClientErrror.new 'Missing <id>: You must provide a droplet id' unless id
 
       if !self.has_key?(id) || refresh
 
@@ -49,10 +51,12 @@ module DigitalOcean
     # create a new droplet
     def create(data={}, save=true)
       droplet = Droplet.new(@client, self, data)
+
       if save
         droplet.save() 
         self[droplet.id] = droplet
       end
+
       droplet
     end
 

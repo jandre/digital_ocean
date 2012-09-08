@@ -3,6 +3,7 @@ require 'digital_ocean/droplets'
 require 'digital_ocean/regions'
 require 'digital_ocean/sizes'
 require 'digital_ocean/images'
+require 'digital_ocean/client_error'
 require 'digital_ocean/ssh_keys'
 require 'json'
 
@@ -25,8 +26,6 @@ module DigitalOcean
       params[:api_key] = @api_key
       params[:client_id] = @client_id
 
-      puts "url: #{url}"
-  
       type = type.to_sym
 
       if type == :get
@@ -39,7 +38,7 @@ module DigitalOcean
 
       response = RestClient.send(type, url, params) 
   
-      puts "response: #{response}"
+      puts "url: #{url}, response: #{response}"
       response = JSON.parse(response)
 
       if response['status'] == "OK"
@@ -51,8 +50,8 @@ module DigitalOcean
 
       end
      
-      # TODO: otherwise, an error condition happened. 
-      raise "Error performing `#{type} #{url}` with parameters=`#{params}`, got #{response}"
+      # otherwise, an error condition happened. 
+      raise ClientError.new("Error performing `#{type} #{url}` with parameters=`#{params}`, got #{response}")
     end
 
     def droplets(refresh=false)

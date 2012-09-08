@@ -10,18 +10,24 @@ module DigitalOcean
 
     # refresh all images 
     def refresh
-      clear()
+      clear
       @client.request(:get, '/images/', {}) do |response| 
-          response['images'].each do |image| 
-            self[image['id']] = Image.new(@client, self, image) 
-          end
+        response['images'].each do |image| 
+          self[image['id']] = Image.new(@client, self, image) 
         end
+      end
 
     end
 
-
-    def find_by_name
-      # TODO
+    # find by name
+    def find_by_name(name)
+      images = []
+      each do |key, image| 
+        if image.name == name
+          images.push(image)
+        end
+      end
+      images
     end
 
 
