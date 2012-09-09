@@ -13,7 +13,7 @@ client.droplets
 client.droplets[21357].refresh
 
 # retreives from memory
-client.droplets[21357] 
+puts "XXXXXXX", client.droplets[21357].ip_address 
 
 #retrieves from memory with refresh
 client.droplets.get(21357, true)

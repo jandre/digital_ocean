@@ -2,7 +2,7 @@ module DigitalOcean
   class Droplet
 
     attr_accessor :name, :size_id, :image_id, :region_id, :ip_address
-    attr_accessor :id, :backups_active, :status_id
+    attr_accessor :id, :backups_active, :status
 
     def initialize(client, container, data={})
       @client = client
