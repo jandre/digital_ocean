@@ -1,7 +1,7 @@
 module DigitalOcean
   class Droplet
 
-    attr_accessor :name, :size_id, :image_id, :region_id
+    attr_accessor :name, :size_id, :image_id, :region_id, :ip_address
     attr_accessor :id, :backups_active, :status_id
 
     def initialize(client, container, data={})
@@ -77,7 +77,7 @@ module DigitalOcean
       command('disable_backups')
     end
 
-    def destroy
+    def destroy!
 
       if @id
         command('destroy')
@@ -124,6 +124,7 @@ module DigitalOcean
         end
 
         @id = response["droplet"]["id"] 
+        @container[@id] = self
       else
         raise 'Already created.'
       end
