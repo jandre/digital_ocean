@@ -14,6 +14,8 @@ module DigitalOcean
       end
     end
 
+
+    # TODO: this doesn't work.
     def save
 
       params = {
@@ -39,7 +41,7 @@ module DigitalOcean
 
     def ssh_pub_key
       if not @ssh_pub_key 
-        raise 'Unable to fetch key. No id set on this key.  Did you save it?' if not @id
+        raise ValidateError.new('Unable to fetch key. No id set on this key.  Did you save it?') if not @id
 
         @client.request(:get, "/ssh_keys/#{@id}") do |response|
           @ssh_pub_key = response['ssh_key']['ssh_pub_key']

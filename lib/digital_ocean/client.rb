@@ -14,9 +14,10 @@ module DigitalOcean
 
     attr_accessor :client_id, :api_key
 
-    def initialize(client_id, api_key)
+    def initialize(client_id, api_key, debug=false)
       @client_id = client_id
       @api_key = api_key
+      @debug = debug
     end
 
    
@@ -36,9 +37,10 @@ module DigitalOcean
         url += "?client_id=#{client_id}&api_key=#{api_key}"
       end
 
+      puts "DEBUG: url: #{url}" if @debug
       response = RestClient.send(type, url, params) 
-  
-      puts "url: #{url}, response: #{response}"
+      puts "DEBUG: response: #{response}" if @debug
+
       response = JSON.parse(response)
 
       if response['status'] == "OK"

@@ -9,24 +9,37 @@ module DigitalOcean
       @container = container
 
       if data
-        # TODO: validate 
+        # TODO: validate
         data.each do |key,value|
-          send("#{key}=",value) if respond_to?(key.to_sym) 
+          send("#{key}=",value) if respond_to?(key.to_sym)
         end
       end
 
     end
-   
+
+    def to_s
+      return super.to_s +
+              "{ id: #{id}, status: #{status}, name: #{name}, size_id: #{size_id}, image_id: #{image_id}, " +
+             "region_id: #{region_id}, ip_address: #{ip_address}, backups_active: #{backups_active} "
+    end
+
     def command(action)
-      raise 'You do not have a droplet id. Have you called save() on your object?' unless @id
+      raise ValidateError.new('You do not have a droplet id. Have you called save() on your object?') unless @id
 
       response = @client.request(
         :get,
-        "/droplets/#{@id}/#{action}"
+        "/droplets/#{@id}/#{action}/"
       )
 
-      raise "There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'" unless response["event_id"]
+      raise ClientError.new("There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'") unless response["event_id"]
 
+    end
+
+    # set an image
+    def image=(value)
+      if value.respond_to?(:id)
+        @image_id = id
+      end
     end
 
     def reboot
@@ -40,7 +53,7 @@ module DigitalOcean
     def shut_down
       command('shut_down')
     end
-    
+
     def power_off
       command('power_off')
     end
@@ -54,19 +67,47 @@ module DigitalOcean
     end
 
     def resize(size_id)
-      #TODO
+      response = @client.request(:get, "/droplets/#{id}/resize/", { size_id: size_id } )
+
+      if !response['event_id']
+        msg = "Error resizing droplet for id=#{id}"
+        raise ClientError.new(msg)
+      end
+
+      response['event_id']
     end
 
     def snapshot(snapshot_name)
-      # TODO
+      response = @client.request(:get, "/droplets/#{id}/snapshot_name/", { name: snapshot_name } )
+
+      if !response['event_id']
+        msg = "Error snapshoting droplet with name=#{snapshot_name} for id=#{id}"
+        raise ClientError.new(msg)
+      end
+
+      response['event_id']
     end
 
     def restore(image_id)
-      # TODO
+      response = @client.request(:get, "/droplets/#{id}/restore/", { image_id: image_id } )
+
+      if !response['event_id']
+        msg = "Error restoring droplet to image_id=#{image_id} for id=#{id}"
+        raise ClientError.new(msg)
+      end
+
+      response['event_id']
     end
 
     def rebuild(image_id)
-      # TODO
+      response = @client.request(:get, "/droplets/#{id}/rebuild/", { image_id: image_id } )
+
+      if !response['event_id']
+        msg = "Error rebuilding droplet with image_id=#{image_id} for id=#{id}"
+        raise ClientError.new(msg)
+      end
+
+      response['event_id']
     end
 
     def enable_backups
@@ -88,25 +129,28 @@ module DigitalOcean
 
     def refresh
       raise 'No id has been set.  Cannot refresh.  Have you called save() on this droplet?' unless @id
-      
+
       response = @client.request(:get, "/droplets/#{id}")
 
       if !response['droplet']
-        puts "No droplet fetched for id=#{id}"
-        return nil
+        msg = "No droplet fetched for id=#{id}"
+        raise ClientError.new(msg)
       end
 
-      # TODO: validate 
-      response['droplet'].each { |key,value| send("#{key}=",value) if respond_to?(key) } 
+      response['droplet'].each { |key,value| send("#{key}=",value) if respond_to?(key) }
 
       self
     end
 
     def save
 
-      #TODO: validate
       if !@id
-        
+
+        raise ValidateError.new('Missing name') unless @name
+        raise ValidateError.new('Missing size_id') unless @size_id
+        raise ValidateError.new('Missing image_id') unless @image_id
+        raise ValidateError.new('Missing region_id') unless @region_id
+
         response = @client.request(
           :get,
           '/droplets/new',
@@ -119,17 +163,38 @@ module DigitalOcean
         )
 
         if !response["droplet"]
-          puts "No droplet fetched for id=#{id}"
-          return nil
+          raise ClientError.new("No droplet fetched for id=#{id}")
         end
 
-        @id = response["droplet"]["id"] 
+        @id = response["droplet"]["id"]
+
         @container[@id] = self
+
+        # TODO: remove this weird logic. maybe add a 'ready' method later 
+        tries = 0
+        done = false
+        while not done
+          begin
+            refresh
+            done = true
+          rescue => e
+            puts e
+            tries += 1
+            if tries < 10
+              sleep 1 
+            else
+              done = true
+            end
+          end
+
+        end
+        refresh
+
+
       else
-        raise 'Already created.'
+        raise ClientError.new('Your droplet was already created.')
       end
 
     end
-    
   end
 end
