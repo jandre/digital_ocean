@@ -6,11 +6,33 @@
 
 ## Description
 
-A ruby interface for the Digital Ocean API here: https://www.digitalocean.com/api
+A ruby interface for the Digital Ocean API here: https://www.digitalocean.com/api.  
+Supports (nearly) everything the API supports to create and manage your droplets.
 
 ## Examples
 
+### Get a list of droplets
+
     require 'digital_ocean'
+    client = DigitalOcean::Client.new(YOUR_CLIENT_ID, YOUR_API_KEY)
+    client.droplets
+
+### Get droplet information
+    
+    TODO
+
+### Create a droplet
+    
+    TODO
+
+### Reboot a droplet
+    
+    TODO
+
+### Destroy a droplet
+  
+    TODO
+
 
 ## Requirements
 
