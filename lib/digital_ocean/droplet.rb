@@ -147,6 +147,7 @@ module DigitalOcean
 
         tries = 0
         done = false
+        
         while not done
           begin
             refresh
@@ -161,7 +162,7 @@ module DigitalOcean
             end
           end
         end
-        refresh
+       arefresh
         block.call(self) if block
 
     end
