@@ -53,7 +53,7 @@ module DigitalOcean
       end
      
       # otherwise, an error condition happened. 
-      raise ClientError.new("Error performing `#{type} #{url}` with parameters=`#{params}`, got #{response}")
+      raise DigitalOcean::ClientError.new("Error performing `#{type} #{url}` with parameters=`#{params}`, got #{response}")
     end
 
     def droplets(refresh=false)

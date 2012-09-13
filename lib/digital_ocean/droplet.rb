@@ -31,7 +31,7 @@ module DigitalOcean
         "/droplets/#{@id}/#{action}/"
       )
 
-      raise ClientError.new("There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'") unless response["event_id"]
+      raise DigitalOcean::ClientError.new("There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'") unless response["event_id"]
 
     end
 
@@ -71,7 +71,7 @@ module DigitalOcean
 
       if !response['event_id']
         msg = "Error resizing droplet for id=#{id}"
-        raise ClientError.new(msg)
+        raise DigitalOcean::ClientError.new(msg)
       end
 
       response['event_id']
@@ -82,7 +82,7 @@ module DigitalOcean
 
       if !response['event_id']
         msg = "Error snapshoting droplet with name=#{snapshot_name} for id=#{id}"
-        raise ClientError.new(msg)
+        raise DigitalOcean::ClientError.new(msg)
       end
 
       response['event_id']
@@ -93,7 +93,7 @@ module DigitalOcean
 
       if !response['event_id']
         msg = "Error restoring droplet to image_id=#{image_id} for id=#{id}"
-        raise ClientError.new(msg)
+        raise DigitalOcean::ClientError.new(msg)
       end
 
       response['event_id']
@@ -104,7 +104,7 @@ module DigitalOcean
 
       if !response['event_id']
         msg = "Error rebuilding droplet with image_id=#{image_id} for id=#{id}"
-        raise ClientError.new(msg)
+        raise DigitalOcean::ClientError.new(msg)
       end
 
       response['event_id']
@@ -134,7 +134,7 @@ module DigitalOcean
 
       if !response['droplet']
         msg = "No droplet fetched for id=#{id}"
-        raise ClientError.new(msg)
+        raise DigitalOcean::ClientError.new(msg)
       end
 
       response['droplet'].each { |key,value| send("#{key}=",value) if respond_to?(key) }
@@ -187,7 +187,7 @@ module DigitalOcean
         )
 
         if !response["droplet"]
-          raise ClientError.new("No droplet fetched for id=#{id}")
+          raise DigitalOcean::ClientError.new("No droplet fetched for id=#{id}")
         end
 
         @id = response["droplet"]["id"]
@@ -196,7 +196,7 @@ module DigitalOcean
 
         return self
       else
-        raise ClientError.new('Your droplet was already created.')
+        raise DigitalOcean::ClientError.new('Your droplet was already created.')
       end
 
     end

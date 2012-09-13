@@ -24,7 +24,7 @@ module DigitalOcean
 
     # get a droplet by id, with an optional refresh parameter
     def get(id, refresh=false)
-      raise ClientErrror.new 'Missing <id>: You must provide a droplet id' unless id
+      raise ClientError.new 'Missing <id>: You must provide a droplet id' unless id
 
       if !self.has_key?(id) || refresh
 
