@@ -162,8 +162,8 @@ module DigitalOcean
             end
           end
         end
-       arefresh
-        block.call(self) if block
+       refresh
+       block.call(self) if block
 
     end
 
