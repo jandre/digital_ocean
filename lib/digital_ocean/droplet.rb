@@ -162,6 +162,7 @@ module DigitalOcean
           end
         end
         refresh
+        block.call(self) if block
 
     end
 
