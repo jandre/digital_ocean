@@ -142,6 +142,29 @@ module DigitalOcean
       self
     end
 
+
+    def ready(max_seconds_wait=0, &block)
+
+        tries = 0
+        done = false
+        while not done
+          begin
+            refresh
+            done = true
+          rescue => e
+            puts "No droplet created yet... (#{e})"
+            tries += 1
+            if tries < max_seconds_wait || max_seconds_wait == 0
+              sleep 1
+            else
+              done = true
+            end
+          end
+        end
+        refresh
+
+    end
+
     def save
 
       if !@id
@@ -170,27 +193,7 @@ module DigitalOcean
 
         @container[@id] = self
 
-        # TODO: remove this weird logic. maybe add a 'ready' method later 
-        tries = 0
-        done = false
-        while not done
-          begin
-            refresh
-            done = true
-          rescue => e
-            puts e
-            tries += 1
-            if tries < 10
-              sleep 1 
-            else
-              done = true
-            end
-          end
-
-        end
-        refresh
-
-
+        return self
       else
         raise ClientError.new('Your droplet was already created.')
       end
