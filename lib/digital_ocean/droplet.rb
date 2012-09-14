@@ -51,7 +51,7 @@ module DigitalOcean
     end
 
     def shut_down
-      command('shut_down')
+      command('shutdown')
     end
 
     def power_off
@@ -147,22 +147,21 @@ module DigitalOcean
 
         tries = 0
         done = false
-        while not done
+        while not done && tries < max_seconds_wait
           begin
             refresh
-            done = true
+            done =  (@status != 'new')
           rescue => e
             puts "No droplet created yet... (#{e})"
-            tries += 1
-            if tries < max_seconds_wait || max_seconds_wait == 0
-              sleep 1
-            else
-              done = true
-            end
           end
+
+          if tries < max_seconds_wait 
+            sleep 1
+          end
+          tries += 1 
         end
-        refresh
         block.call(self) if block
+        return done 
 
     end
 
