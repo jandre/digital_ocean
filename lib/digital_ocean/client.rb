@@ -41,7 +41,7 @@ module DigitalOcean
       begin
         response = RestClient.send(type, url, params) 
       rescue RestClient::InternalServerError => e
-        puts "Error: #{e} ", e.backtrace
+        puts "Error in RestClient: #{e} "
         raise DigitalOcean::ClientError.new("Error performing `#{type} #{url}` with parameters=`#{params}`, got InternalServerError")
 
       end

@@ -13,6 +13,7 @@ module DigitalOcean
         data.each do |key,value|
           send("#{key}=",value) if respond_to?(key.to_sym)
         end
+
       end
 
     end
@@ -136,8 +137,10 @@ module DigitalOcean
         msg = "No droplet fetched for id=#{id}"
         raise DigitalOcean::ClientError.new(msg)
       end
-
-      response['droplet'].each { |key,value| send("#{key}=",value) if respond_to?(key) }
+     
+      response['droplet'].each do |key,value| 
+        send("#{key}=",value) if respond_to?(key.to_sym) 
+      end
 
       self
     end
@@ -147,10 +150,11 @@ module DigitalOcean
 
         tries = 0
         done = false
-        while not done && tries < max_seconds_wait
+
+        while (!done) && (tries <= max_seconds_wait)
           begin
             refresh
-            done =  (@status != 'new')
+            done = (status != 'new')
           rescue => e
             puts "No droplet created yet... (#{e})"
           end
@@ -160,6 +164,7 @@ module DigitalOcean
           end
           tries += 1 
         end
+
         block.call(self) if block
         return done 
 
