@@ -8,19 +8,67 @@ require 'digital_ocean/ssh_keys'
 require 'json'
 
 module DigitalOcean
+
+  class Refreshable
+    
+#   instance_methods.each { |m| undef_method m unless m =~ /(^__|^send$|^object_id$|^new$|)/ }
+
+    def initialize(options, &constructor)
+      
+      @debug = options.fetch(:debug, false)
+      @next_refresh_time = Time.now().to_i
+      @cache = options.fetch(:cache, false)
+      @cache_time = options.fetch(:cache_seconds, 10 * 60)
+      @constructor = constructor
+
+    end
+  
+    protected
+
+      def method_missing(name, *args, &block)
+        puts "calling #{name}"
+        target.send(name, *args, &block) if target.respond_to?(name)
+      end
+
+      def expired
+        Time.now.to_i >= @next_refresh_time
+      end
+
+      def target
+
+        if @cache && expired 
+          @target = nil
+          @next_refresh_time = Time.now.to_i + @cache_time
+          puts "DEBUG: *** forcing refresh" if @debug
+        end
+
+        @target = @constructor.call()
+         
+      end
+  end
+
   class Client
 
     BASE_URL = "https://api.digitalocean.com"
 
     attr_accessor :client_id, :api_key
 
-    def initialize(client_id, api_key, debug=false)
+    def initialize(client_id, api_key, options={})
       @client_id = client_id
       @api_key = api_key
-      @debug = debug
+
+      @debug = options.fetch(:debug, false)
+      @cache = options.fetch(:cache, false)
+      @options = options
+
     end
 
-   
+    def make_droplets
+      return Droplets.new(self) unless @cache 
+      return Refreshable.new(@options) do 
+          Droplets.new(self)
+      end
+    end
     
     def request(type=:get, uri='/', params={}, &block)
       url = BASE_URL + uri 
@@ -63,10 +111,11 @@ module DigitalOcean
       raise DigitalOcean::ClientError.new("Error performing `#{type} #{url}` with parameters=`#{params}`, got #{response}")
     end
 
+    
     def droplets(refresh=false)
       
-      @droplets = nil if refresh
-      @droplets = @droplets || Droplets.new(self) 
+      @droplets = nil if refresh 
+      @droplets = @droplets || make_droplets
       @droplets
     end
 

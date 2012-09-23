@@ -12,7 +12,7 @@ end
 
 client_id, api_key = ARGV[0], ARGV[1]
 
-client = DigitalOcean::Client.new(client_id, api_key, debug=true)
+client = DigitalOcean::Client.new(client_id, api_key, :debug => true)
 
 puts "-- my current droplets: --"
 
