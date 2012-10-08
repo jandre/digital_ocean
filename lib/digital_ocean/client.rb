@@ -25,9 +25,9 @@ module DigitalOcean
   
     protected
 
+
       def method_missing(name, *args, &block)
-        puts "calling #{name}"
-        target.send(name, *args, &block) if target.respond_to?(name)
+        self.target.send(name, *args, &block) if self.target.respond_to?(name)
       end
 
       def expired
