@@ -88,10 +88,9 @@ module DigitalOcean
       puts "DEBUG: url: #{url}" if @debug
       begin
         response = RestClient.send(type, url, params) 
-      rescue RestClient::InternalServerError => e
-        puts "Error in RestClient: #{e} "
-        raise DigitalOcean::ClientError.new("Error performing `#{type} #{url}` with parameters=`#{params}`, got InternalServerError")
-
+      rescue => e
+        puts "Error performing `#{type} #{url}` with parameters=`#{params}`, got `#{e}`"
+        raise
       end
 
       puts "DEBUG: response: #{response}" if @debug
