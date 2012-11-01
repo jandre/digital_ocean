@@ -90,6 +90,9 @@ module DigitalOcean
         response = RestClient.send(type, url, params) 
       rescue => e
         puts "Error performing `#{type} #{url}` with parameters=`#{params}`, got `#{e}`"
+        if response
+          puts "response #{response}"
+        end
         raise
       end
 
