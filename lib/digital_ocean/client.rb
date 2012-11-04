@@ -14,8 +14,9 @@ module DigitalOcean
 #   instance_methods.each { |m| undef_method m unless m =~ /(^__|^send$|^object_id$|^new$|)/ }
 
     def initialize(options, &constructor)
-      
+   
       @debug = options.fetch(:debug, false)
+      puts "DEBUG ** initialize" if @debug
       @next_refresh_time = Time.now().to_i
       @cache = options.fetch(:cache, false)
       @cache_time = options.fetch(:cache_seconds, 10 * 60)
@@ -42,8 +43,8 @@ module DigitalOcean
           puts "DEBUG: *** forcing refresh" if @debug
         end
 
-        @target = @constructor.call()
-         
+        @target = @target || @constructor.call()
+        @target 
       end
   end
 
