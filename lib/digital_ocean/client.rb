@@ -16,7 +16,7 @@ module DigitalOcean
     def initialize(options, &constructor)
    
       @debug = options.fetch(:debug, false)
-      puts "DEBUG ** initialize" if @debug
+      puts "DEBUG *** initialize options: #{options}" if @debug
       @next_refresh_time = Time.now().to_i
       @cache = options.fetch(:cache, false)
       @cache_time = options.fetch(:cache_seconds, 10 * 60)
