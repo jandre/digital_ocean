@@ -113,7 +113,7 @@ module DigitalOcean
 
     
     def droplets(refresh=false)
-      
+     
       @droplets = nil if refresh 
       @droplets = @droplets || make_droplets
       @droplets
