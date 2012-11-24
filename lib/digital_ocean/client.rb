@@ -6,13 +6,13 @@ require 'digital_ocean/images'
 require 'digital_ocean/client_error'
 require 'digital_ocean/ssh_keys'
 require 'json'
+require 'eventmachine'
+require 'em-synchrony/em-http'
 
 module DigitalOcean
 
   class Refreshable
     
-#   instance_methods.each { |m| undef_method m unless m =~ /(^__|^send$|^object_id$|^new$|)/ }
-
     def initialize(options, &constructor)
    
       @debug = options.fetch(:debug, false)
@@ -61,6 +61,7 @@ module DigitalOcean
       @debug = options.fetch(:debug, false)
       @cache = options.fetch(:cache, false)
       @options = options
+      @async=options.fetch(:async, false)
 
     end
 
@@ -70,8 +71,63 @@ module DigitalOcean
           Droplets.new(self)
       end
     end
+
+   def request_async(type=:get, uri='/', params={}, &block)
+      url = BASE_URL + uri 
+      # params[:api_key] = @api_key
+      # params[:client_id] = @client_id
+
+      type = type.to_sym
+
+      url += "?client_id=#{@client_id}&api_key=#{@api_key}"
+
+      puts "DEBUG: url: #{url}" if @debug
+      begin
+        if type == :get
+          http = EventMachine::HttpRequest.new(url).get(:query => params)
+          response = http.response
+        else
+          http = EventMachine::HttpRequest.new(url).post(:body => params)
+          response = http.response
+        end
+        # response = RestClient.send(type, url, params) 
+      rescue => e
+        puts "Error performing `#{type} #{url}` with parameters=`#{params}`, got `#{e}`"
+        raise
+      end
+
+      puts "DEBUG: response: #{response}" if @debug
+
+      response = JSON.parse(response)
+
+      if response['status'] == "OK"
+        if block
+          return block.call(response) 
+        else
+          return response
+        end
+
+      end
+     
+      # otherwise, an error condition happened. 
+      raise DigitalOcean::ClientError.new("Error performing `#{type} #{url}` with parameters=`#{params}`, got #{response}")
+    end
     
     def request(type=:get, uri='/', params={}, &block)
+
+      if @async
+        return request_async(type, uri, params, &block) 
+        
+      else
+        return request_sync(type, uri, params, &block)
+      #  do |response|
+
+          # block.call(response) if block_given?
+        # end
+      end
+    end
+
+    def request_sync(type=:get, uri='/', params={}, &block)
       url = BASE_URL + uri 
       params[:api_key] = @api_key
       params[:client_id] = @client_id
