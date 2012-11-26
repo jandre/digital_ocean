@@ -24,16 +24,43 @@ module DigitalOcean
              "region_id: #{region_id}, ip_address: #{ip_address}, backups_active: #{backups_active} "
     end
 
-    def command(action)
-      raise ValidateError.new('You do not have a droplet id. Have you called save() on your object?') unless @id
+    def command(action, &block)
 
-      response = @client.request(
-        :get,
-        "/droplets/#{@id}/#{action}/"
-      )
+      if @client.async && block_given?
 
-      raise DigitalOcean::ClientError.new("There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'") unless response["event_id"]
+        EventMachine.defer do
+          begin
 
+            raise ValidateError.new('You do not have a droplet id. Have you called save() on your object?') unless @id
+
+
+
+            response = @client.request(
+              :get,
+              "/droplets/#{@id}/#{action}/"
+            )
+
+            raise DigitalOcean::ClientError.new("There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'") unless response["event_id"]
+
+            block.call(true)
+
+          rescue => e
+            block.call(nil, e)
+          end
+
+        end
+      else
+        raise ValidateError.new('You do not have a droplet id. Have you called save() on your object?') unless @id
+
+        response = @client.request(
+          :get,
+          "/droplets/#{@id}/#{action}/"
+        ) 
+
+        raise DigitalOcean::ClientError.new("There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'") unless response["event_id"]
+
+        block.call(true, nil) if block_given?
+      end
     end
 
     # set an image
@@ -43,31 +70,33 @@ module DigitalOcean
       end
     end
 
-    def reboot
-      command('reboot')
+    def reboot(&block)
+      command('reboot', &block)
     end
 
-    def power_cycle
-      command('power_cycle')
+    def power_cycle(&block)
+      command('power_cycle', &block)
     end
 
-    def shut_down
-      command('shutdown')
+    def shut_down(&block)
+      command('shutdown', &block)
     end
 
-    def power_off
-      command('power_off')
+    def power_off(&block)
+      command('power_off', &block)
     end
 
-    def power_on
-      command('power_on')
+    def power_on(&block)
+      command('power_on', &block)
     end
 
-    def reset_root_password
-      command('reset_root_password')
+    def reset_root_password(&block)
+      command('reset_root_password',&block)
     end
 
-    def resize(size_id)
+
+    def _resize(size_id)
+
       response = @client.request(:get, "/droplets/#{id}/resize/", { size_id: size_id } )
 
       if !response['event_id']
@@ -76,9 +105,54 @@ module DigitalOcean
       end
 
       response['event_id']
+      
     end
 
-    def snapshot(snapshot_name)
+
+    def resize(size_id, &block)
+
+      if @client.async && block_given?
+
+        EventMachine.defer do
+          begin
+
+            response = _resize(size_id)
+            block.call(response)
+
+          rescue => e
+            block.call(nil, e)
+          end
+        end
+        return
+      end
+
+      return _resize(size_id)
+    end
+
+
+    def snapshot(snapshot_name, &block)
+
+      if @client.async && block_given?
+
+        EventMachine.defer do
+          begin
+
+            response = _snapshot(snapshot_name)
+            block.call(response)
+
+          rescue => e
+            block.call(nil, e)
+          end
+        end
+        return
+      end
+
+      return _snapshot(snapshot_name)
+
+    end
+
+
+    def _snapshot(snapshot_name)
       response = @client.request(:get, "/droplets/#{id}/snapshot_name/", { name: snapshot_name } )
 
       if !response['event_id']
@@ -89,7 +163,7 @@ module DigitalOcean
       response['event_id']
     end
 
-    def restore(image_id)
+    def _restore(image_id)
       response = @client.request(:get, "/droplets/#{id}/restore/", { image_id: image_id } )
 
       if !response['event_id']
@@ -100,7 +174,31 @@ module DigitalOcean
       response['event_id']
     end
 
-    def rebuild(image_id)
+
+    def restore(image_id, &block)
+
+      if @client.async && block_given?
+
+        EventMachine.defer do
+          begin
+
+            response = _restore(image_id)
+            block.call(response)
+
+          rescue => e
+            block.call(nil, e)
+          end
+        end
+        return
+      end
+
+      return _restore(image_id)
+
+    end
+
+
+
+    def _rebuild(image_id)
       response = @client.request(:get, "/droplets/#{id}/rebuild/", { image_id: image_id } )
 
       if !response['event_id']
@@ -111,24 +209,53 @@ module DigitalOcean
       response['event_id']
     end
 
-    def enable_backups
-      command('enable_backups')
+
+    def rebuild(image_id, &block)
+
+      if @client.async && block_given?
+
+        EventMachine.defer do
+          begin
+
+            response = _rebuild(image_id)
+            block.call(response)
+
+          rescue => e
+            block.call(nil, e)
+          end
+        end
+        return
+      end
+
+      return _rebuild(image_id)
+
     end
 
-    def disable_backups
-      command('disable_backups')
+
+
+    def enable_backups(&block)
+      command('enable_backups', &block)
     end
 
-    def destroy!
+    def disable_backups(&block)
+      command('disable_backups', &block)
+    end
+
+    def destroy!(&block)
 
       if @id
-        command('destroy')
-        @container.delete(@id)
-        @id = nil
+        command('destroy') do |results, err|
+
+          block.call(results, err) if block_given?
+          
+          @container.delete(@id)
+          @id = nil
+
+        end
       end
     end
 
-    def refresh
+    def _refresh
       raise 'No id has been set.  Cannot refresh.  Have you called save() on this droplet?' unless @id
 
       response = @client.request(:get, "/droplets/#{id}")
@@ -145,8 +272,30 @@ module DigitalOcean
       self
     end
 
+    def refresh(&block)
 
-    def ready(max_seconds_wait=0, &block)
+
+      if block_given? && @client.async
+
+        EventMachine.defer do
+          begin
+
+            result = _refresh
+            block.call(result)
+
+          rescue => e
+            block.call(nil, e)
+          end
+
+        end
+        
+      else
+        return _refresh
+      end
+    end
+
+
+    def _ready(max_seconds_wait=0, &block)
 
         tries = 0
         done = false
@@ -165,10 +314,26 @@ module DigitalOcean
           tries += 1 
         end
 
-        block.call(self) if block
+        block.call(self) if block_given?
         return done 
 
     end
+
+    def ready(&block)
+      if @client.async && block_given?
+        EventMachine.defer do
+          begin
+            _ready(&block)
+          rescue => e
+            block.call(nil, e)
+          end
+        end
+      else
+        return _ready(&block)
+      end
+    end
+
+
 
     def save
 

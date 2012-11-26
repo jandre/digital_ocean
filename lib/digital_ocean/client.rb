@@ -6,6 +6,8 @@ require 'digital_ocean/images'
 require 'digital_ocean/client_error'
 require 'digital_ocean/ssh_keys'
 require 'json'
+require 'eventmachine'
+
 
 module DigitalOcean
 
@@ -16,11 +18,12 @@ module DigitalOcean
     def initialize(options, &constructor)
    
       @debug = options.fetch(:debug, false)
-      puts "DEBUG ** initialize" if @debug
+      puts "DEBUG *** initialize options: #{options}" if @debug
       @next_refresh_time = Time.now().to_i
       @cache = options.fetch(:cache, false)
       @cache_time = options.fetch(:cache_seconds, 10 * 60)
       @constructor = constructor
+      @async = options.fetch(:async, false)
 
     end
   
@@ -53,6 +56,7 @@ module DigitalOcean
     BASE_URL = "https://api.digitalocean.com"
 
     attr_accessor :client_id, :api_key
+    attr_reader :async
 
     def initialize(client_id, api_key, options={})
       @client_id = client_id
@@ -61,6 +65,7 @@ module DigitalOcean
       @debug = options.fetch(:debug, false)
       @cache = options.fetch(:cache, false)
       @options = options
+      @async = options.fetch(:async, false)
 
     end
 
@@ -115,32 +120,85 @@ module DigitalOcean
     end
 
     
-    def droplets(refresh=false)
-      
-      @droplets = nil if refresh 
-      @droplets = @droplets || make_droplets
-      @droplets
+    def droplets(refresh=false, &block)
+     
+      @droplets = nil if refresh
+
+      if block_given? && @async
+
+        EventMachine.defer do 
+          @droplets = @droplets || make_droplets
+          block.call(@droplets)
+        end
+
+      else
+        @droplets = @droplets || make_droplets
+        block.call(@droplets) if block_given?
+        return @droplets
+      end
     end
 
-    def regions(refresh=false)
+    def regions(refresh=false, &block)
       @regions = nil if refresh
-      @regions = @regions || Regions.new(self)
-      @regions
+
+
+      if block_given? && @async
+
+        EventMachine.defer do 
+          @regions = @regions || Regions.new(self)
+          block.call(@regions)
+        end
+
+      else
+
+        @regions = @regions || Regions.new(self)
+        block.call(@regions) if block_given?
+        return @regions
+      end
     end
     
-    def sizes(refresh=false)
+    def sizes(refresh=false, &block)
       @sizes = nil if refresh
-      @sizes = @sizes || Sizes.new(self)
-      @sizes
+
+      if block_given? && @async
+
+        EventMachine.defer do 
+          @sizes = @sizes || Sizes.new(self)
+          block.call(@sizes)
+        end
+
+      else
+
+
+        @sizes = @sizes || Sizes.new(self)
+        block.call(@sizes) if block_given?
+        return @sizes
+
+      end
+
+
     end
 
-    def images(refresh=false)
+    def images(refresh=false, &block)
       @images = nil if refresh
-      @images = @images || Images.new(self)
-      @images
+      if block_given? && @async
+
+        EventMachine.defer do 
+          @images = @images || Images.new(self)
+          block.call(@images)
+        end
+
+      else
+
+        @images = @images || Images.new(self)
+        block.call(@images) if block_given?
+        return @images
+
+      end
+
     end
 
-    def ssh_keys(refresh=false)
+    def ssh_keys(refresh=false, &block)
       @ssh_keys = nil if refresh
       @ssh_keys = @ssh_keys || SshKeys.new(self)
       @ssh_keys
