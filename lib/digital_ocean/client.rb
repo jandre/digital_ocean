@@ -31,7 +31,19 @@ module DigitalOcean
 
 
       def method_missing(name, *args, &block)
-        self.target.send(name, *args, &block) if self.target.respond_to?(name)
+
+        begin
+          self.target.send(name, *args, &block) if self.target.respond_to?(name)
+        rescue => e
+          puts "DigitalOcean error: #{e}" 
+          if block_given && @async
+            block.call(nil, e)
+          else
+            raise
+          end
+
+        end
+
       end
 
       def expired
