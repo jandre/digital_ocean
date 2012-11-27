@@ -92,6 +92,7 @@ module DigitalOcean
       end
 
       puts "DEBUG: url: #{url}" if @debug
+      response = nil
       begin
         response = RestClient.send(type, url, params) 
       rescue => e
