@@ -266,7 +266,7 @@ module DigitalOcean
       end
      
       response['droplet'].each do |key,value| 
-        send("#{key}=",value) if respond_to?(key.to_sym) 
+        self.send("#{key}=",value) if respond_to?(key.to_sym) 
       end
 
       self
@@ -303,7 +303,7 @@ module DigitalOcean
         while (!done) && (tries <= max_seconds_wait)
           begin
             refresh
-            done = (status != 'new')
+            done = (status != 'new' && ip_address != '')
           rescue => e
             puts "No droplet created yet... (#{e})"
           end
