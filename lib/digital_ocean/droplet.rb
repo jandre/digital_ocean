@@ -266,7 +266,7 @@ module DigitalOcean
       end
      
       response['droplet'].each do |key,value| 
-        send("#{key}=",value) if respond_to?(key.to_sym) 
+        self.send("#{key}=",value) if respond_to?(key.to_sym) 
       end
 
       self
