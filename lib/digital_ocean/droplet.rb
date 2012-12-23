@@ -303,7 +303,7 @@ module DigitalOcean
         while (!done) && (tries <= max_seconds_wait)
           begin
             refresh
-            done = (status != 'new')
+            done = (status == 'active' && ip_address != '')
           rescue => e
             puts "No droplet created yet... (#{e})"
           end
