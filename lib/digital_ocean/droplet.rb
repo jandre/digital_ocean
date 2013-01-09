@@ -26,19 +26,17 @@ module DigitalOcean
 
     def command(action, &block)
 
+      action = action.to_s
+      
       if @client.async && block_given?
 
         EventMachine.defer do
+
           begin
 
             raise ValidateError.new('You do not have a droplet id. Have you called save() on your object?') unless @id
 
-
-
-            response = @client.request(
-              :get,
-              "/droplets/#{@id}/#{action}/"
-            )
+            response = @client.request( :get, "/droplets/#{@id}/#{action}/")
 
             raise DigitalOcean::ClientError.new("There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'") unless response["event_id"]
 
@@ -50,12 +48,12 @@ module DigitalOcean
 
         end
       else
+
+        puts "XXX: NOT ASYNC!!!!"
+
         raise ValidateError.new('You do not have a droplet id. Have you called save() on your object?') unless @id
 
-        response = @client.request(
-          :get,
-          "/droplets/#{@id}/#{action}/"
-        ) 
+        response = @client.request(:get, "/droplets/#{@id}/#{action}/") 
 
         raise DigitalOcean::ClientError.new("There was a failure performing `#{action}` on droplet=#{id}.  response=#{response}'") unless response["event_id"]
 

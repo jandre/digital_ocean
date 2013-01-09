@@ -121,7 +121,8 @@ module DigitalOcean
 
       if response['status'] == "OK"
         if block
-          return block.call(response) 
+          block.call(response)
+          return
         else
           return response
         end
