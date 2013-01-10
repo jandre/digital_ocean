@@ -49,8 +49,6 @@ module DigitalOcean
         end
       else
 
-        puts "XXX: NOT ASYNC!!!!"
-
         raise ValidateError.new('You do not have a droplet id. Have you called save() on your object?') unless @id
 
         response = @client.request(:get, "/droplets/#{@id}/#{action}/") 
