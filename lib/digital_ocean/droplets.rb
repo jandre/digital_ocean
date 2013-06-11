@@ -27,7 +27,7 @@ module DigitalOcean
     # get a droplet by id, with an optional refresh parameter
     def get(id, should_refresh=false, &block)
 
-
+      id = id.to_i
       if block_given? && @client.async
 
         EventMachine.defer do
